@@ -1,5 +1,7 @@
 package cucumber.eclipse.steps.jdt;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,9 +50,7 @@ public class MethodDefinition extends JavaParser {
 	private static final String AFTER = "After(";
 	
 	private List<Statement> methodBodyList = new ArrayList<Statement>();
-	private String methodBody;
 	private String lang;
-	private int lineNumber;
 
 	public String[] java8CukeImport = null;
 
@@ -101,37 +101,30 @@ public class MethodDefinition extends JavaParser {
 	public List<Statement> getMethodBodyList() {
 		return methodBodyList;
 	}
-
-	/**
-	 * Filter Before() and After() And
-	 * Get Method Body of Lambda-Expressions
-	 * And collect Line-Number
-	 * 
-	 * @param statement
-	 * @return
-	 */
-	public String getBodyStatement(Statement statement) {
-		if(!statement.toString().startsWith(BEFORE) && !statement.toString().startsWith(AFTER)){
-			this.methodBody = statement.toString();
-			this.lineNumber = getLineNumber(statement);	
-		}
-		
-		return methodBody;
+	
+	public List<Step> getSteps() {
+		return getMethodBodyList().stream()
+			.filter(this::isNotBeforeOrAfter)
+			.map(this::createStep)
+			.collect(toList());
 	}
-
-	/**
-	 * @return int
-	 */
-	public int getCukeLineNumber() {
-		return lineNumber;
+	
+	protected boolean isNotBeforeOrAfter(final Statement statement) {
+		return !(statement.toString().startsWith(BEFORE) || statement.toString().startsWith(AFTER));
 	}
-
-	/**
-	 * @param lambdaExpr
-	 * @return String
-	 */
-	public String getLambdaStep(String lambdaExpr) {
-
+	
+	protected Step createStep(final Statement statement) {
+		// Add all lambda-steps to Step
+		Step step = new Step();
+		step.setSource(getSource(iCompUnit));	//source
+		step.setText(getLambdaStep(statement));	//step
+		step.setLineNumber(getLineNumber(statement));	//line-number
+		step.setLang(getCukeLang());	//Language
+		return step;
+	}
+	
+	public String getLambdaStep(Statement statement) {
+		String lambdaExpr = statement.toString();
 		String lambdaStep = lambdaExpr.trim();		
 		if (lambdaStep.matches(STARTSWITH_KEYWORD_PARENTHESIS)) {	
 					
