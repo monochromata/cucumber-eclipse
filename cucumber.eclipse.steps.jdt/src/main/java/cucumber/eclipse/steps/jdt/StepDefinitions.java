@@ -190,21 +190,7 @@ public class StepDefinitions extends MethodDefinition {
 
 			//Iterate MethodDefinition
 			for (MethodDefinition method : methodDefList) {
-				//Iterate Method-Statements
-				for (Statement statement : method.getMethodBodyList()) {					
-					
-					// Add all lambda-steps to Step
-					Step step = new Step();
-					step.setSource(method.getSource(iCompUnit));	//source
-					//if(!method.getBodyStatement(statement).startsWith("Before(") && !method.getBodyStatement(statement).startsWith("After")){
-						step.setText(method.getLambdaStep(method.getBodyStatement(statement)));	//step
-						step.setLineNumber(method.getCukeLineNumber());	//line-number
-						step.setLang(method.getCukeLang());	//Language
-						steps.add(step);
-					//}
-					
-					
-				}
+				steps.addAll(method.getSteps());
 			}
 		}
 		
